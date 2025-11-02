@@ -1,0 +1,59 @@
+import pandas as pd
+import plotly.express as px
+import numpy as np
+
+# Load the dataset
+file_name = "songs_10_rows (1) (1).csv"
+df = pd.read_csv(file_name)
+
+# =========================================================================
+# 🎶 1. DATA PREPARATION FOR GEOSPATIAL MAPPING
+# =========================================================================
+# Create a hypothetical Artist-to-Country mapping
+artist_to_country = {
+    'Britney Spears': 'United States',
+    'blink-182': 'United States',
+    'Faith Hill': 'United States',
+    'Bon Jovi': 'United States',
+    '*NSYNC': 'United States',
+    'Robbie Williams': 'United Kingdom', # Assigning UK for some variation
+    'Eminem': 'United States',
+    'Aaliyah': 'United States',
+    'Red Hot Chili Peppers': 'United States',
+    'Christina Aguilera': 'United States'
+}
+
+# Apply mapping and aggregate data
+df['country'] = df['artist'].map(artist_to_country)
+
+# Aggregate the mean popularity for each country
+df_map_data = df.groupby('country')['popularity'].mean().reset_index()
+df_map_data = df_map_data.rename(columns={'popularity': 'Mean Popularity'})
+
+
+# =========================================================================
+# 🌎 2. CHOROPLETH MAP VISUALIZATION (Geographical Map)
+# =========================================================================
+
+# Choropleth maps visualize aggregated data values onto a geographical map.
+fig = px.choropleth(
+    df_map_data,
+    locations='country',
+    locationmode='country names', # Instructs Plotly to use the country name strings
+    color='Mean Popularity',
+    hover_name='country',
+    color_continuous_scale=px.colors.sequential.Plasma,
+    title='Geospatial Analysis: Mean Song Popularity by Hypothetical Artist Origin Country'
+)
+
+# Customize map projection and layout
+fig.update_layout(
+    margin={"r":0,"t":50,"l":0,"b":0},
+    geo=dict(
+        showframe=False,
+        showcoastlines=False,
+        projection_type='equirectangular' # A common map projection
+    )
+)
+
+# fig.show() # Uncomment to show the interactive plot
