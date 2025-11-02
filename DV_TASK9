@@ -1,0 +1,70 @@
+import pandas as pd
+import plotly.express as px
+import plotly.io as pio
+
+# Set Plotly theme
+pio.templates.default = "plotly_white"
+
+# =========================================================================
+# 🎶 1. DATA LOADING AND TIME SERIES PREPARATION
+# =========================================================================
+file_name = "songs_10_rows (1) (1).csv"
+df = pd.read_csv(file_name)
+
+# Group data by the time dimension ('year') and calculate the mean of a measure ('popularity')
+df_time_series = df.groupby('year')['popularity'].mean().reset_index()
+
+# Rename columns for clarity in the plot
+df_time_series.columns = ['Year', 'Mean_Popularity']
+
+
+# =========================================================================
+# 📈 2. LINE GRAPH with TREND LINE
+# (Scatter plot with lines, using OLS regression for the trend)
+# =========================================================================
+print("--- Line Graph with Trend Line (Mean Popularity) ---")
+
+# Create the base Line Graph
+fig_line_trend = px.scatter(
+    df_time_series,
+    x='Year',
+    y='Mean_Popularity',
+    title='Time Series Analysis: Mean Popularity Trend Over Years',
+    labels={'Mean_Popularity': 'Mean Popularity Score'},
+    color_discrete_sequence=['#4C78A8'] # Base color for the line
+)
+
+# Connect the points with a line
+fig_line_trend.update_traces(mode='lines+markers')
+
+# Add the OLS (Ordinary Least Squares) Trend Line. This is added as a separate trace.
+fig_line_trend.add_traces(px.scatter(
+    df_time_series, 
+    x='Year', 
+    y='Mean_Popularity', 
+    trendline='ols' # Automatically computes and plots the trend line
+).data[1]) 
+
+# Update layout for cleaner year display
+fig_line_trend.update_layout(xaxis_tickformat='d')
+# fig_line_trend.show() # Uncomment to show the interactive plot
+
+
+# =========================================================================
+# 📉 3. AREA CHART
+# (Shows the magnitude of the metric over time)
+# =========================================================================
+print("\n--- Area Chart (Mean Popularity) ---")
+
+fig_area = px.area(
+    df_time_series,
+    x='Year',
+    y='Mean_Popularity',
+    title='Time Series Analysis: Area Chart of Mean Popularity Over Years',
+    labels={'Mean_Popularity': 'Mean Popularity Score'},
+    color_discrete_sequence=['#54A24B'],
+    line_shape='linear' # Can change to 'spline' for smoothing the curve
+)
+
+fig_area.update_layout(xaxis_tickformat='d')
+# fig_area.show() # Uncomment to show the interactive plot
