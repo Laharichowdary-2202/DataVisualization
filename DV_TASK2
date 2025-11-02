@@ -77,6 +77,63 @@ sns.kdeplot(df[continuous_col], fill=True)
 plt.title(f'Density Plot of {continuous_col}')
 plt.show()
 
+#task2b
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# --- 1. Data Loading ---
+df = pd.read_csv('songs_10_rows (1).csv')
+
+# --- 2. Univariate Analysis of Categorical Data: 'explicit' ---
+
+# Identify the categorical attribute to plot (using 'explicit')
+explicit_counts = df['explicit'].value_counts()
+
+# 2a. Bar Chart
+plt.figure(figsize=(6, 5))
+explicit_counts.plot(kind='bar', color=['skyblue', 'salmon'])
+plt.title('Bar Chart of Explicit Status')
+plt.xlabel('Explicit')
+plt.ylabel('Count')
+plt.xticks(rotation=0)
+plt.tight_layout()
+plt.savefig('explicit_bar_chart_combined.png')
+plt.close()
+
+# 2b. Pie Chart
+plt.figure(figsize=(6, 5))
+# Auto-calculate and display percentages
+plt.pie(explicit_counts, labels=explicit_counts.index, autopct='%1.1f%%', startangle=90, colors=['skyblue', 'salmon'])
+plt.title('Pie Chart of Explicit Status')
+plt.tight_layout()
+plt.savefig('explicit_pie_chart_combined.png')
+plt.close()
+
+# --- 3. Univariate Analysis of Continuous Data: 'popularity' ---
+
+# Identify the continuous attribute to plot (using 'popularity')
+
+# 3. Histogram, Density Plot, and Rug Plot (Combined)
+plt.figure(figsize=(8, 6))
+
+# Histogram (Blue Bars)
+sns.histplot(df['popularity'], kde=False, bins=5, color='skyblue', label='Histogram')
+# Density Plot (Red Line - KDE)
+sns.kdeplot(df['popularity'], color='red', label='Density Plot')
+# Rug Plot (Black Ticks)
+sns.rugplot(df['popularity'], color='black')
+
+plt.title('Distribution of Song Popularity (Histogram, Density, and Rug Plot)')
+plt.xlabel('Popularity Score')
+plt.ylabel('Count / Density')
+plt.legend()
+plt.tight_layout()
+plt.savefig('popularity_distribution_plot_combined.png')
+plt.close()
+
+print("Univariate analysis plots saved successfully.")
+
 # Rug Plot
 plt.figure()
 sns.rugplot(df[continuous_col])
