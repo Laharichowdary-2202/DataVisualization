@@ -1,0 +1,84 @@
+# =======================
+# UNIVARIATE ANALYSIS & VISUALIZATION
+# =======================
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ✅ Load Dataset
+df = pd.read_csv("your_dataset.csv")  # <-- Change file name
+print("Dataset Shape:", df.shape)
+print(df.head())
+
+# ✅ Identify column types
+categorical_col = 'categorical_column'  # <-- Change this!
+continuous_col = 'continuous_column'    # <-- Change this!
+
+print(df[categorical_col].value_counts())
+print(df[continuous_col].describe())
+
+# =======================
+# 📌 CATEGORICAL DATA VISUALIZATION
+# =======================
+
+# Bar Chart
+plt.figure()
+df[categorical_col].value_counts().plot(kind='bar')
+plt.title(f'Bar Chart of {categorical_col}')
+plt.xlabel('Categories')
+plt.ylabel('Count')
+plt.show()
+
+# Pie Chart
+plt.figure()
+df[categorical_col].value_counts().plot(kind='pie', autopct='%1.1f%%')
+plt.title(f'Pie Chart of {categorical_col}')
+plt.ylabel('')
+plt.show()
+
+# =======================
+# 📌 CONTINUOUS DATA VISUALIZATION
+# =======================
+
+# Scatter Plot
+plt.figure()
+sns.scatterplot(x=df.index, y=df[continuous_col])
+plt.title(f'Scatter Plot of {continuous_col}')
+plt.show()
+
+# Line Plot
+plt.figure()
+sns.lineplot(x=df.index, y=df[continuous_col])
+plt.title(f'Line Plot of {continuous_col}')
+plt.show()
+
+# Strip Plot
+plt.figure()
+sns.stripplot(x=df[continuous_col])
+plt.title(f'Strip Plot of {continuous_col}')
+plt.show()
+
+# Swarm Plot (Continuous vs Categorical)
+plt.figure()
+sns.swarmplot(x=df[categorical_col], y=df[continuous_col])
+plt.title(f'Swarm Plot of {continuous_col} by {categorical_col}')
+plt.show()
+
+# Histogram
+plt.figure()
+sns.histplot(df[continuous_col], kde=False)
+plt.title(f'Histogram of {continuous_col}')
+plt.show()
+
+# Density Plot
+plt.figure()
+sns.kdeplot(df[continuous_col], fill=True)
+plt.title(f'Density Plot of {continuous_col}')
+plt.show()
+
+# Rug Plot
+plt.figure()
+sns.rugplot(df[continuous_col])
+plt.title(f'Rug Plot of {continuous_col}')
+plt.show()
