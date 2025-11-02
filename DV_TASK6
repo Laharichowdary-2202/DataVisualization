@@ -1,0 +1,94 @@
+import pandas as pd
+import networkx as nx
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Set Matplotlib style for better visualization
+plt.style.use('seaborn-v0_8-darkgrid')
+
+# =========================================================================
+# 🎶 1. DATA LOADING AND PREPARATION
+# =========================================================================
+file_name = "songs_10_rows (1) (1).csv"
+df = pd.read_csv(file_name)
+
+# 1. Handle multiple genres (e.g., "rock, pop") by splitting the string and duplicating rows
+df_connections = df.assign(genre=df['genre'].str.split(', ')).explode('genre')
+
+# 2. Aggregate popularity per Artist and connection count per Genre for node sizing
+artist_popularity = df_connections.groupby('artist')['popularity'].mean().to_dict()
+genre_connections = df_connections.groupby('genre').size().to_dict()
+
+
+# =========================================================================
+# 🌳 2. GRAPH AND NETWORK CREATION (Bipartite Graph: Artist <-> Genre)
+# =========================================================================
+G = nx.Graph()
+
+# Add nodes with attributes
+for artist, pop in artist_popularity.items():
+    # Artist Node: Size based on Popularity
+    G.add_node(artist, type='artist', size=pop * 5, pop=pop)
+
+for genre, count in genre_connections.items():
+    # Genre Node: Size based on Connection Count (Degree)
+    G.add_node(genre, type='genre', size=count * 300, degree=count)
+
+# Add edges (connections) between Artist and Genre
+for index, row in df_connections.iterrows():
+    artist = row['artist']
+    genre = row['genre']
+    # Edges connect artists to their genres
+    G.add_edge(artist, genre, weight=row['popularity'])
+
+
+# =========================================================================
+# 📉 3. FORCE-BASED LAYOUT VISUALIZATION
+# =========================================================================
+
+# Prepare node properties for drawing
+node_sizes = [G.nodes[n]['size'] for n in G.nodes]
+min_pop = df_connections['popularity'].min()
+max_pop = df_connections['popularity'].max()
+
+node_colors = []
+for n in G.nodes:
+    if G.nodes[n]['type'] == 'artist':
+        # Color based on normalized popularity (using 'cool' colormap)
+        normalized_pop = (G.nodes[n]['pop'] - min_pop) / (max_pop - min_pop)
+        node_colors.append(plt.cm.cool(normalized_pop))
+    else:
+        # Static color for Genre/Store nodes
+        node_colors.append('lightcoral')
+
+# Generate the force-based layout (spring_layout)
+pos = nx.spring_layout(G, k=0.5, iterations=50, seed=42) # k controls node repulsion/attraction
+
+plt.figure(figsize=(15, 10))
+
+# Draw Nodes
+nx.draw_networkx_nodes(G, pos,
+                       node_color=node_colors,
+                       node_size=node_sizes,
+                       alpha=0.8,
+                       linewidths=1.5,
+                       edgecolors='black')
+
+# Draw Edges
+nx.draw_networkx_edges(G, pos,
+                       alpha=0.3,
+                       edge_color='gray',
+                       width=1)
+
+# Draw Labels
+nx.draw_networkx_labels(G, pos, font_size=10, font_weight='bold')
+
+# Create Custom Legend
+pop_legend_handle = plt.scatter([], [], color=plt.cm.cool(0.8), s=300, label='Artist (Product) Node: Size/Color $\propto$ Popularity')
+genre_legend_handle = plt.scatter([], [], color='lightcoral', s=500, label='Genre (Store) Node: Size $\propto$ Connections')
+
+plt.legend(handles=[pop_legend_handle, genre_legend_handle], loc='upper right', title="Network Entities")
+plt.title('Force-Based Layout: Song Network (Artist $\leftrightarrow$ Genre)', fontsize=18)
+plt.axis('off')
+plt.tight_layout()
+plt.show()
