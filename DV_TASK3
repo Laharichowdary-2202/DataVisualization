@@ -1,0 +1,98 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Set a professional visualization style
+sns.set_theme(style="whitegrid")
+
+# =========================================================================
+# 🎶 1. DATA SETUP (Replace with your actual dataset loading)
+# =========================================================================
+
+# Creating hypothetical song data for demonstration
+N = 100
+data = {
+    'genre': ['Pop', 'Rock', 'Hip-Hop', 'Classical', 'Electronic'] * (N // 5),
+    'artist': ['Artist A', 'Artist B', 'Artist C'] * (N // 3) + ['Artist A'] * (N % 3),
+    # Continuous variables
+    'duration_ms': (pd.Series([200000, 250000, 180000, 320000, 160000]) * (N // 5)) + (5000 * pd.np.random.randn(N)),
+    'tempo': (pd.Series([120.5, 98.2, 140.1, 80.0, 128.8]) * (N // 5)) + (5 * pd.np.random.randn(N)),
+    # Categorical variable for C vs C analysis
+    'hit_status': (['Hit'] * 40 + ['Flop'] * 60)
+}
+df = pd.DataFrame(data)
+df['duration_ms'] = df['duration_ms'].astype(int)
+df['tempo'] = df['tempo'].abs() # Ensure tempo is positive
+
+# If you have an actual file:
+# df = pd.read_csv('your_song_data.csv')
+# print(df.head())
+
+# =========================================================================
+# 📊 2. CATEGORICAL vs. CATEGORICAL (genre vs. hit_status)
+# =========================================================================
+print("\n--- 2. CATEGORICAL vs. CATEGORICAL: Stacked Bar Chart ---")
+
+# Create a contingency table (proportions of hit_status within each genre)
+ct = pd.crosstab(df['genre'], df['hit_status'], normalize='index') 
+
+plt.figure(figsize=(10, 6))
+# Plot the stacked bar chart
+ct.plot(kind='bar', stacked=True, ax=plt.gca())
+plt.title('Stacked Bar Chart: Hit Status Proportion by Genre')
+plt.ylabel('Proportion')
+plt.xlabel('Genre')
+plt.xticks(rotation=45)
+plt.legend(title='Hit Status')
+plt.tight_layout()
+plt.show()
+
+
+# =========================================================================
+# 📈 3. CONTINUOUS vs. CONTINUOUS (duration_ms vs. tempo)
+# =========================================================================
+print("\n--- 3. CONTINUOUS vs. CONTINUOUS: Scatterplot with Fit Line ---")
+
+plt.figure(figsize=(10, 6))
+# 'regplot' combines a scatterplot with a linear regression line
+sns.regplot(x='duration_ms', y='tempo', data=df,
+            scatter_kws={'alpha':0.6, 's': 50}, # Adjust point size and transparency
+            line_kws={'color':'red', 'linewidth': 2})
+plt.title('Scatterplot and Fit Line: Tempo vs. Song Duration')
+plt.xlabel('Duration (ms)')
+plt.ylabel('Tempo (BPM)')
+plt.show()
+
+
+# =========================================================================
+# 📦 4. CATEGORICAL vs. CONTINUOUS (genre vs. duration_ms)
+# =========================================================================
+print("\n--- 4. CATEGORICAL vs. CONTINUOUS: Visualizations ---")
+
+# --- Box Plot ---
+plt.figure(figsize=(12, 6))
+sns.boxplot(x='genre', y='duration_ms', data=df)
+plt.title('Box Plot: Song Duration Distribution by Genre')
+plt.xlabel('Genre')
+plt.ylabel('Duration (ms)')
+plt.show()
+
+
+# --- Violin Plot ---
+plt.figure(figsize=(12, 6))
+# Violin plot shows density and includes quartiles ('inner')
+sns.violinplot(x='genre', y='duration_ms', data=df, inner='quartile', palette='viridis')
+plt.title('Violin Plot: Song Duration Density by Genre')
+plt.xlabel('Genre')
+plt.ylabel('Duration (ms)')
+plt.show()
+
+
+# --- Bar Chart (Summary Statistics: Mean) ---
+plt.figure(figsize=(12, 6))
+# 'barplot' computes the mean and its 95% confidence interval
+sns.barplot(x='genre', y='duration_ms', data=df, estimator=pd.Series.mean, capsize=0.1, color='skyblue')
+plt.title('Bar Chart: Mean Song Duration by Genre (with 95% CI)')
+plt.xlabel('Genre')
+plt.ylabel('Mean Duration (ms)')
+plt.show()
