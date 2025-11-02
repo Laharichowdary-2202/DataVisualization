@@ -1,0 +1,115 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from pandas.plotting import parallel_coordinates
+
+# Set a professional visualization style
+sns.set_theme(style="whitegrid")
+
+# =========================================================================
+# 🎶 1. DATA SETUP FOR MULTIVARIATE ANALYSIS (Hypothetical Song Data)
+# =========================================================================
+
+N = 300
+np.random.seed(42)
+
+data = {
+    'genre': np.random.choice(['Pop', 'Rock', 'Hip-Hop'], N),
+    'hit_status': np.random.choice(['Hit', 'Flop'], N, p=[0.45, 0.55]),
+    # Multiple continuous measures
+    'duration_ms': (200000 + 1000 * np.random.randn(N) * 20),
+    'tempo': (120 + 5 * np.random.randn(N) * 5),
+    'loudness': (-5 + 1.5 * np.random.randn(N) * 5),
+    'danceability': np.random.rand(N),
+    # Time/sequence variable (for Line Graph)
+    'week': np.tile(np.arange(1, 11), 30),
+}
+df = pd.DataFrame(data)
+df['duration_ms'] = df['duration_ms'].abs().astype(int)
+df['tempo'] = df['tempo'].abs()
+
+# Prepare data subsets and column lists
+df_subset = df.iloc[:100].copy() # Subset for Parallel Coordinates for clarity
+cols_continuous = ['duration_ms', 'tempo', 'loudness', 'danceability']
+
+
+# =========================================================================
+# 📊 2. SCATTERPLOT MATRIX (PAIR PLOT)
+# =========================================================================
+print("--- 2. Scatterplot Matrix (Pair Plot) ---")
+
+# Generates all pairwise scatterplots and histograms (univariate) on the diagonal, colored by 'genre'
+sns.pairplot(df[cols_continuous + ['genre']],
+             hue='genre',
+             plot_kws={'alpha': 0.6, 's': 30})
+plt.suptitle('Scatterplot Matrix of Song Measures by Genre', y=1.02, fontsize=16)
+plt.show()
+
+
+# =========================================================================
+# 📈 3. PARALLEL COORDINATES PLOT
+# =========================================================================
+print("\n--- 3. Parallel Coordinates Plot ---")
+
+# Normalize the continuous columns (essential for this plot)
+df_normalized = df_subset.copy()
+for col in cols_continuous:
+    min_val = df_normalized[col].min()
+    max_val = df_normalized[col].max()
+    df_normalized[col] = (df_normalized[col] - min_val) / (max_val - min_val)
+
+plt.figure(figsize=(12, 6))
+
+# Use pandas' parallel_coordinates function
+parallel_coordinates(
+    frame=df_normalized[['genre'] + cols_continuous],
+    class_column='genre',
+    colormap=plt.cm.get_cmap("viridis")
+)
+
+plt.title('Parallel Coordinates Plot: Normalized Measures by Genre (Subset)')
+plt.ylabel('Normalized Value')
+plt.legend(title='Genre', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+# =========================================================================
+# 📉 4. MULTIVARIATE LINE GRAPH (Trend over Time)
+# =========================================================================
+print("\n--- 4. Multivariate Line Graph (Trend of Mean Tempo) ---")
+
+# Aggregate the continuous measure by the time variable and the categorical variable
+df_trend = df.groupby(['week', 'genre'])['tempo'].mean().reset_index()
+
+plt.figure(figsize=(12, 6))
+# Plot the trend, with lines separated by 'genre'
+sns.lineplot(data=df_trend, x='week', y='tempo', hue='genre', marker='o')
+
+plt.title('Line Graph: Mean Tempo Trend Over Weeks, Grouped by Genre')
+plt.xlabel('Week')
+plt.ylabel('Mean Tempo (BPM)')
+plt.legend(title='Genre')
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.show()
+
+
+# =========================================================================
+# 📦 5. STACKED BAR CHART (Categorical vs. Categorical)
+# =========================================================================
+print("\n--- 5. Stacked Bar Chart (Genre vs. Hit Status) ---")
+
+# Create a contingency table (proportions of hit_status within each genre)
+ct = pd.crosstab(df['genre'], df['hit_status'], normalize='index')
+
+plt.figure(figsize=(10, 6))
+# Plot the stacked bar chart
+ct.plot(kind='bar', stacked=True, ax=plt.gca())
+plt.title('Stacked Bar Chart: Hit Status Proportion by Genre')
+plt.ylabel('Proportion')
+plt.xlabel('Genre')
+plt.xticks(rotation=0)
+plt.legend(title='Hit Status', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
