@@ -1,0 +1,51 @@
+import pandas as pd
+import plotly.express as px
+import numpy as np
+import plotly.io as pio
+pio.templates.default = "plotly_white"
+
+# Load the dataset
+file_name = "songs_10_rows (1) (1).csv"
+df = pd.read_csv(file_name)
+
+# =========================================================================
+# 🎶 1. DATA PREPARATION FOR HIERARCHICAL VISUALIZATION
+# =========================================================================
+# 1. Split and explode the 'genre' column to handle multiple genres per song
+df_songs_hierarchical = df.assign(genre=df['genre'].str.split(', ')).explode('genre')
+# 2. Keep only the necessary columns for the plot
+df_songs_hierarchical = df_songs_hierarchical[['genre', 'artist', 'song', 'popularity']].copy()
+
+
+# =========================================================================
+# 🌳 2. TREEMAP (Hierarchy: Genre -> Artist -> Song | Value: Popularity)
+# =========================================================================
+# Define the hierarchy path and the value column
+fig_treemap = px.treemap(
+    df_songs_hierarchical,
+    path=['genre', 'artist', 'song'], # The order defines the hierarchy
+    values='popularity',             # The size of the boxes is determined by popularity
+    color='popularity',              # Color is also based on popularity magnitude
+    color_continuous_scale='Turbo',
+    title='Treemap: Song Popularity by Genre and Artist'
+)
+
+fig_treemap.update_layout(margin=dict(t=50, l=10, r=10, b=10))
+# fig_treemap.show() # Uncomment this line to display the interactive plot
+
+
+# =========================================================================
+# ☀️ 3. SUNBURST CHART (Hierarchy: Genre -> Artist -> Song | Value: Popularity)
+# =========================================================================
+# Same path and values as the treemap, but displayed radially
+fig_sunburst = px.sunburst(
+    df_songs_hierarchical,
+    path=['genre', 'artist', 'song'],
+    values='popularity',
+    color='popularity',
+    color_continuous_scale='Viridis',
+    title='Sunburst: Song Popularity by Genre and Artist'
+)
+
+fig_sunburst.update_layout(margin=dict(t=50, l=10, r=10, b=10))
+# fig_sunburst.show() # Uncomment this line to display the interactive plot
